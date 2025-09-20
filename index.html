@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R&D Project Monitoring System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+            font-size: 1.1rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .progress-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        }
+
+        .file-upload {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        }
+
+        .file-upload:hover {
+            border-color: #764ba2;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .metric-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .metric-card .value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .discrepancy {
+            background: #ffe6e6;
+            border: 2px solid #ff4757;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .audit-log {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .audit-entry {
+            padding: 10px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .audit-entry .timestamp {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-on-track {
+            background: #d4edda;
+            color: #28a745;
+        }
+
+        .status-delayed {
+            background: #fff3cd;
+            color: #ffc107;
+        }
+
+        .status-critical {
+            background: #f8d7da;
+            color: #dc3545;
+        }
+
+        .deadline-info {
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 20px;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .progress-inputs {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 R&D Project Monitor</h1>
+            <p>Automated Research Project Monitoring & Reporting System</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('researcher')">📝 Researcher Portal</button>
+            <button class="nav-tab" onclick="switchTab('admin')">📊 Admin Dashboard</button>
+            <button class="nav-tab" onclick="switchTab('audit')">📋 Audit Trail</button>
+        </div>
+
+        <!-- Researcher Portal -->
+        <div id="researcher" class="tab-content active">
+            <h2>📝 Submit Progress Report</h2>
+            
+            <form id="progressForm">
+                <div class="form-group">
+                    <label for="projectId">Project ID</label>
+                    <input type="text" id="projectId" value="RND-2024-001" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="researcherName">Researcher Name</label>
+                    <input type="text" id="researcherName" required placeholder="Enter your full name">
+                </div>
+
+                <div class="progress-inputs">
+                    <div class="form-group">
+                        <label for="physicalProgress">Physical Progress (%)</label>
+                        <input type="number" id="physicalProgress" min="0" max="100" step="0.1" required placeholder="e.g., 10.5">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fundsUtilized">Funds Utilized (%)</label>
+                        <input type="number" id="fundsUtilized" min="0" max="100" step="0.1" required placeholder="e.g., 5.2">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="milestones">Current Milestones Completed</label>
+                    <textarea id="milestones" rows="3" placeholder="Describe completed milestones..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="challenges">Challenges & Issues</label>
+                    <textarea id="challenges" rows="3" placeholder="Describe any challenges faced..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="nextSteps">Next Steps</label>
+                    <textarea id="nextSteps" rows="3" placeholder="Describe planned next steps..."></textarea>
+                </div>
+
+                <button type="submit" class="btn">Submit Progress Report</button>
+            </form>
+
+            <div style="margin-top: 30px;">
+                <h3>📄 Upload Progress Document</h3>
+                <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                    <input type="file" id="fileInput" accept=".pdf,.doc,.docx" style="display: none;" onchange="handleFileUpload(event)">
+                    <p>📤 Click to upload progress report (PDF, DOC, DOCX)</p>
+                    <p style="font-size: 0.9rem; opacity: 0.7;">Maximum file size: 10MB</p>
+                </div>
+                <div id="fileStatus"></div>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="admin" class="tab-content">
+            <h2>📊 Real-time Project Dashboard</h2>
+            
+            <div class="deadline-info">
+                <h3>⏰ Next Submission Deadline</h3>
+                <p id="nextDeadline">December 15, 2024 (23 days remaining)</p>
+                <span class="status-badge status-on-track">On Track</span>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="metric-card">
+                    <h3>Physical Progress</h3>
+                    <div class="value" id="physicalProgressValue">0%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="physicalProgressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Financial Progress</h3>
+                    <div class="value" id="financialProgressValue">0%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="financialProgressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Total Budget</h3>
+                    <div class="value">$500K</div>
+                    <p>Allocated for RND-2024-001</p>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Project Status</h3>
+                    <div class="value" style="font-size: 1.8rem;">✅</div>
+                    <span class="status-badge status-on-track" id="projectStatus">On Track</span>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3>📈 Progress Timeline</h3>
+                <canvas id="progressChart" width="400" height="200"></canvas>
+            </div>
+
+            <div id="discrepancies">
+                <!-- Discrepancies will be populated here -->
+            </div>
+
+            <div class="chart-container">
+                <h3>📊 Recent Submissions</h3>
+                <div id="submissionHistory">
+                    <p style="color: #666; text-align: center;">No submissions yet</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Trail -->
+        <div id="audit" class="tab-content">
+            <h2>📋 Audit Trail</h2>
+            <p style="margin-bottom: 20px;">Complete log of all data submissions and modifications</p>
+            
+            <div class="audit-log" id="auditLog">
+                <div class="audit-entry">
+                    <div class="timestamp">2024-11-22 09:00:00</div>
+                    <div>System initialized - Project RND-2024-001 created</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state management
+        let projectData = {
+            projectId: 'RND-2024-001',
+            physicalProgress: 0,
+            financialProgress: 0,
+            submissions: [],
+            auditTrail: [
+                {
+                    timestamp: new Date('2024-11-22T09:00:00'),
+                    action: 'System initialized - Project RND-2024-001 created',
+                    user: 'System'
+                }
+            ],
+            nextDeadline: new Date('2024-12-15'),
+            totalBudget: 500000
+        };
+
+        let progressChart;
+
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Remove active class from all tabs and contents
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to selected tab and content
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'admin') {
+                updateDashboard();
+                initializeChart();
+            }
+        }
+
+        // Progress form submission
+        document.getElementById('progressForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                timestamp: new Date(),
+                researcherName: document.getElementById('researcherName').value,
+                physicalProgress: parseFloat(document.getElementById('physicalProgress').value),
+                financialProgress: parseFloat(document.getElementById('fundsUtilized').value),
+                milestones: document.getElementById('milestones').value,
+                challenges: document.getElementById('challenges').value,
+                nextSteps: document.getElementById('nextSteps').value
+            };
+            
+            // Update project data
+            projectData.physicalProgress = formData.physicalProgress;
+            projectData.financialProgress = formData.financialProgress;
+            projectData.submissions.push(formData);
+            
+            // Add to audit trail
+            addAuditEntry(`Progress report submitted: ${formData.physicalProgress}% physical, ${formData.financialProgress}% financial`, formData.researcherName);
+            
+            // Show success message
+            showAlert('Progress report submitted successfully!', 'success');
+            
+            // Reset form
+            this.reset();
+            document.getElementById('projectId').value = 'RND-2024-001';
+            
+            // Update dashboard if visible
+            updateDashboard();
+        });
+
+        // File upload handling
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const fileStatus = document.getElementById('fileStatus');
+            fileStatus.innerHTML = `
+                <div class="alert alert-success">
+                    📄 File uploaded: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)
+                    <br>🔄 Processing document for data extraction...
+                </div>
+            `;
+            
+            // Simulate document processing
+            setTimeout(() => {
+                const extractedData = simulateDocumentProcessing();
+                processExtractedData(extractedData);
+                
+                addAuditEntry(`Document uploaded and processed: ${file.name}`, 'System');
+            }, 2000);
+        }
+
+        // Simulate document processing and data extraction
+        function simulateDocumentProcessing() {
+            // Simulate OCR/text extraction with some variance
+            const physicalProgress = projectData.physicalProgress + (Math.random() - 0.5) * 5; // ±2.5% variance
+            const financialProgress = projectData.financialProgress + (Math.random() - 0.5) * 3; // ±1.5% variance
+            
+            return {
+                physicalProgress: Math.max(0, Math.min(100, physicalProgress)),
+                financialProgress: Math.max(0, Math.min(100, financialProgress)),
+                extractedText: "Sample extracted text from document processing..."
+            };
+        }
+
+        // Process extracted data and check for discrepancies
+        function processExtractedData(extractedData) {
+            const threshold = 2.0; // 2% threshold for discrepancies
+            const discrepancies = [];
+            
+            const physicalDiff = Math.abs(extractedData.physicalProgress - projectData.physicalProgress);
+            const financialDiff = Math.abs(extractedData.financialProgress - projectData.financialProgress);
+            
+            if (physicalDiff > threshold) {
+                discrepancies.push({
+                    type: 'Physical Progress',
+                    manual: projectData.physicalProgress,
+                    extracted: extractedData.physicalProgress,
+                    difference: physicalDiff
+                });
+            }
+            
+            if (financialDiff > threshold) {
+                discrepancies.push({
+                    type: 'Financial Progress',
+                    manual: projectData.financialProgress,
+                    extracted: extractedData.financialProgress,
+                    difference: financialDiff
+                });
+            }
+            
+            // Update file status with results
+            const fileStatus = document.getElementById('fileStatus');
+            if (discrepancies.length > 0) {
+                fileStatus.innerHTML += `
+                    <div class="alert alert-warning">
+                        ⚠️ Discrepancies detected! Please review:
+                        ${discrepancies.map(d => 
+                            `<br>• ${d.type}: Manual ${d.manual.toFixed(1)}% vs Document ${d.extracted.toFixed(1)}% (Diff: ${d.difference.toFixed(1)}%)`
+                        ).join('')}
+                    </div>
+                `;
+                
+                addAuditEntry(`Discrepancies detected in document processing: ${discrepancies.length} issues found`, 'System');
+                
+                // Send alert email (simulated)
+                sendDiscrepancyAlert(discrepancies);
+            } else {
+                fileStatus.innerHTML += `
+                    <div class="alert alert-success">
+                        ✅ Document processing complete! No significant discrepancies found.
+                    </div>
+                `;
+            }
+            
+            updateDiscrepanciesDisplay(discrepancies);
+        }
+
+        // Send discrepancy alert (simulated)
+        function sendDiscrepancyAlert(discrepancies) {
+            addAuditEntry('Automated email alert sent to project investigator regarding discrepancies', 'System');
+            console.log('EMAIL ALERT: Discrepancies detected in project RND-2024-001', discrepancies);
+        }
+
+        // Update dashboard display
+        function updateDashboard() {
+            // Update metric cards
+            document.getElementById('physicalProgressValue').textContent = `${projectData.physicalProgress.toFixed(1)}%`;
+            document.getElementById('financialProgressValue').textContent = `${projectData.financialProgress.toFixed(1)}%`;
+            
+            // Update progress bars
+            document.getElementById('physicalProgressBar').style.width = `${projectData.physicalProgress}%`;
+            document.getElementById('financialProgressBar').style.width = `${projectData.financialProgress}%`;
+            
+            // Update project status
+            updateProjectStatus();
+            
+            // Update submission history
+            updateSubmissionHistory();
+            
+            // Check for deadline alerts
+            checkDeadlineAlerts();
+            
+            // Update chart
+            if (progressChart) {
+                updateProgressChart();
+            }
+        }
+
+        // Update project status based on progress
+        function updateProjectStatus() {
+            const avgProgress = (projectData.physicalProgress + projectData.financialProgress) / 2;
+            const statusElement = document.getElementById('projectStatus');
+            
+            if (avgProgress >= 80) {
+                statusElement.textContent = 'Excellent';
+                statusElement.className = 'status-badge status-on-track';
+            } else if (avgProgress >= 50) {
+                statusElement.textContent = 'On Track';
+                statusElement.className = 'status-badge status-on-track';
+            } else if (avgProgress >= 25) {
+                statusElement.textContent = 'Delayed';
+                statusElement.className = 'status-badge status-delayed';
+            } else {
+                statusElement.textContent = 'Critical';
+                statusElement.className = 'status-badge status-critical';
+            }
+        }
+
+        // Update submission history
+        function updateSubmissionHistory() {
+            const historyContainer = document.getElementById('submissionHistory');
+            
+            if (projectData.submissions.length === 0) {
+                historyContainer.innerHTML = '<p style="color: #666; text-align: center;">No submissions yet</p>';
+                return;
+            }
+            
+            const recentSubmissions = projectData.submissions.slice(-5).reverse();
+            historyContainer.innerHTML = recentSubmissions.map(submission => `
+                <div style="padding: 15px; border-left: 4px solid #667eea; margin-bottom: 15px; background: #f8f9fa; border-radius: 5px;">
+                    <strong>${submission.researcherName}</strong> - ${submission.timestamp.toLocaleDateString()}
+                    <br>Physical: ${submission.physicalProgress}%, Financial: ${submission.financialProgress}%
+                    <br><small style="color: #666;">Milestones: ${submission.milestones.substring(0, 100)}${submission.milestones.length > 100 ? '...' : ''}</small>
+                </div>
+            `).join('');
+        }
+
+        // Check deadline alerts
+        function checkDeadlineAlerts() {
+            const now = new Date();
+            const daysUntilDeadline = Math.ceil((projectData.nextDeadline - now) / (1000 * 60 * 60 * 24));
+            
+            if (daysUntilDeadline < 0) {
+                // Deadline missed
+                document.getElementById('nextDeadline').innerHTML = `
+                    <span style="color: #dc3545;">⚠️ DEADLINE MISSED by ${Math.abs(daysUntilDeadline)} days!</span>
+                `;
+                sendDeadlineMissedAlert();
+            } else if (daysUntilDeadline <= 7) {
+                // Deadline approaching
+                document.getElementById('nextDeadline').innerHTML = `
+                    <span style="color: #ffc107;">⚠️ ${daysUntilDeadline} days remaining</span>
+                `;
+            }
+        }
+
+        // Send deadline missed alert
+        function sendDeadlineMissedAlert() {
+            addAuditEntry('Automated deadline alert sent - submission deadline missed', 'System');
+            console.log('EMAIL ALERT: Submission deadline missed for project RND-2024-001');
+        }
+
+        // Initialize progress chart
+        function initializeChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            
+            if (progressChart) {
+                progressChart.destroy();
+            }
+            
+            progressChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Current'],
+                    datasets: [
+                        {
+                            label: 'Physical Progress (%)',
+                            data: [0, 5, 12, 18, projectData.physicalProgress],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Financial Progress (%)',
+                            data: [0, 3, 8, 15, projectData.financialProgress],
+                            borderColor: '#764ba2',
+                            backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update progress chart
+        function updateProgressChart() {
+            if (!progressChart) return;
+            
+            progressChart.data.datasets[0].data[4] = projectData.physicalProgress;
+            progressChart.data.datasets[1].data[4] = projectData.financialProgress;
+            progressChart.update();
+        }
+
+        // Update discrepancies display
+        function updateDiscrepanciesDisplay(discrepancies) {
+            const container = document.getElementById('discrepancies');
+            
+            if (discrepancies.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="discrepancy">
+                    <h3>⚠️ Data Discrepancies Detected</h3>
+                    ${discrepancies.map(d => `
+                        <p><strong>${d.type}:</strong> Manual Entry (${d.manual.toFixed(1)}%) vs Document (${d.extracted.toFixed(1)}%) - Difference: ${d.difference.toFixed(1)}%</p>
+                    `).join('')}
+                    <button class="btn btn-danger" onclick="resolveDiscrepancies()">Resolve Discrepancies</button>
+                </div>
+            `;
+        }
+
+        // Resolve discrepancies
+        function resolveDiscrepancies() {
+            document.getElementById('discrepancies').innerHTML = '';
+            addAuditEntry('Discrepancies marked as resolved by administrator', 'Admin');
+            showAlert('Discrepancies have been resolved.', 'success');
+        }
+
+        // Add audit trail entry
+        function addAuditEntry(action, user = 'System') {
+            const entry = {
+                timestamp: new Date(),
+                action: action,
+                user: user
+            };
+            
+            projectData.auditTrail.push(entry);
+            updateAuditLog();
+        }
+
+        // Update audit log display
+        function updateAuditLog() {
+            const auditLog = document.getElementById('auditLog');
+            auditLog.innerHTML = projectData.auditTrail.slice(-10).reverse().map(entry => `
+                <div class="audit-entry">
+                    <div class="timestamp">${entry.timestamp.toLocaleString()}</div>
+                    <div>${entry.action} - <strong>${entry.user}</strong></div>
+                </div>
+            `).join('');
+        }
+
+        // Show alert messages
+        function showAlert(message, type = 'success') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = message;
+            
+            // Insert at the top of the active tab
+            const activeTab = document.querySelector('.tab-content.active');
+            activeTab.insertBefore(alertDiv, activeTab.firstChild);
+            
+            // Remove alert after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+
+       
+        function initializeDeadlineMonitoring() {
+            setInterval(() => {
+                const now = new Date();
+                const daysUntilDeadline = Math.ceil((projectData.nextDeadline - now) / (1000 * 60 * 60 * 24));
+             
+                if (daysUntilDeadline < 0 && projectData.submissions.length === 0) {
+                    const lastSubmission = projectData.submissions[projectData.submissions.length - 1];
+                    const daysSinceLastSubmission = lastSubmission ? 
+                        Math.ceil((now - lastSubmission.timestamp) / (1000 * 60 * 60 * 24)) : Infinity;
+                    
+                    if (daysSinceLastSubmission > 30) { 
+                        sendDeadlineMissedAlert();
+                    }
+                }
+            }, 60000); 
+        }
+
+       
+        function generateProgressReport() {
+            const report = {
+                projectId: projectData.projectId,
+                generatedAt: new Date(),
+                physicalProgress: projectData.physicalProgress,
+                financialProgress: projectData.financialProgress,
+                totalSubmissions: projectData.submissions.length,
+                lastSubmission: projectData.submissions[projectData.submissions.length - 1],
+                status: document.getElementById('projectStatus').textContent,
+                upcomingDeadline: projectData.nextDeadline,
+                budgetUtilized: (projectData.financialProgress / 100) * projectData.totalBudget,
+                recommendedActions: generateRecommendations()
+            };
+            
+            return report;
+        }
+
+        // Generate recommendations based on project status
+        function generateRecommendations() {
+            const recommendations = [];
+            const physicalProgress = projectData.physicalProgress;
+            const financialProgress = projectData.financialProgress;
+            
+            if (financialProgress > physicalProgress + 10) {
+                recommendations.push("⚠️ Financial progress exceeds physical progress significantly. Review budget allocation.");
+            }
+            
+            if (physicalProgress < 25 && financialProgress > 50) {
+                recommendations.push("🔍 High financial utilization with low physical progress. Consider project timeline review.");
+            }
+            
+            if (projectData.submissions.length === 0) {
+                recommendations.push("📝 No progress submissions yet. Please submit initial progress report.");
+            }
+            
+            const avgProgress = (physicalProgress + financialProgress) / 2;
+            if (avgProgress < 50) {
+                recommendations.push("⏰ Project progress is below expected timeline. Consider resource reallocation.");
+            }
+            
+            return recommendations;
+        }
+
+        // Advanced analytics functions
+        function calculateProjectVelocity() {
+            if (projectData.submissions.length < 2) return 0;
+            
+            const recent = projectData.submissions.slice(-2);
+            const timeDiff = (recent[1].timestamp - recent[0].timestamp) / (1000 * 60 * 60 * 24); // days
+            const progressDiff = recent[1].physicalProgress - recent[0].physicalProgress;
+            
+            return progressDiff / timeDiff; // progress per day
+        }
+
+        function estimateCompletion() {
+            const velocity = calculateProjectVelocity();
+            if (velocity <= 0) return null;
+            
+            const remainingProgress = 100 - projectData.physicalProgress;
+            const estimatedDays = remainingProgress / velocity;
+            const completionDate = new Date();
+            completionDate.setDate(completionDate.getDate() + estimatedDays);
+            
+            return completionDate;
+        }
+
+        // Enhanced dashboard features
+        function addAdvancedMetrics() {
+            const velocity = calculateProjectVelocity();
+            const estimatedCompletion = estimateCompletion();
+            const recommendations = generateRecommendations();
+            
+            // Add velocity metric if there are enough data points
+            if (projectData.submissions.length >= 2) {
+                const metricsGrid = document.querySelector('.dashboard-grid');
+                const velocityCard = document.createElement('div');
+                velocityCard.className = 'metric-card';
+                velocityCard.innerHTML = `
+                    <h3>Project Velocity</h3>
+                    <div class="value">${velocity.toFixed(2)}%</div>
+                    <p>Progress per day</p>
+                `;
+                metricsGrid.appendChild(velocityCard);
+            }
+            
+            // Add recommendations section
+            if (recommendations.length > 0) {
+                const adminTab = document.getElementById('admin');
+                const recommendationsDiv = document.createElement('div');
+                recommendationsDiv.className = 'chart-container';
+                recommendationsDiv.innerHTML = `
+                    <h3>💡 Recommendations</h3>
+                    ${recommendations.map(rec => `<p style="margin: 10px 0; padding: 10px; background: #fff3cd; border-radius: 5px;">${rec}</p>`).join('')}
+                `;
+                adminTab.appendChild(recommendationsDiv);
+            }
+        }
+
+        // Email notification simulation
+        function simulateEmailNotifications() {
+            // This would integrate with an actual email service in production
+            const emailQueue = [];
+            
+            function queueEmail(to, subject, body, priority = 'normal') {
+                emailQueue.push({
+                    to: to,
+                    subject: subject,
+                    body: body,
+                    priority: priority,
+                    timestamp: new Date()
+                });
+                
+                console.log('Email queued:', { to, subject, priority });
+                addAuditEntry(`Email notification queued: ${subject}`, 'Email System');
+            }
+            
+            return { queueEmail };
+        }
+
+        // Data export functionality
+        function exportProjectData() {
+            const exportData = {
+                project: projectData,
+                exportDate: new Date(),
+                analytics: {
+                    velocity: calculateProjectVelocity(),
+                    estimatedCompletion: estimateCompletion(),
+                    recommendations: generateRecommendations()
+                }
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${projectData.projectId}_export_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            addAuditEntry('Project data exported', 'Admin');
+        }
+
+        // Initialize system when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize deadline monitoring
+            initializeDeadlineMonitoring();
+            
+            // Set up email notification system
+            const emailSystem = simulateEmailNotifications();
+            window.emailSystem = emailSystem;
+            
+            // Add export button to admin dashboard
+            const adminTab = document.getElementById('admin');
+            const exportButton = document.createElement('button');
+            exportButton.className = 'btn';
+            exportButton.textContent = '📤 Export Project Data';
+            exportButton.onclick = exportProjectData;
+            exportButton.style.marginTop = '20px';
+            adminTab.appendChild(exportButton);
+            
+            // Initialize dashboard
+            updateDashboard();
+            
+            // Add some sample data for demonstration
+            setTimeout(() => {
+                // Simulate some initial progress
+                if (projectData.submissions.length === 0) {
+                    addAuditEntry('Demo: System ready for first submission', 'System');
+                }
+            }, 1000);
+        });
+
+        // Advanced search and filtering for audit log
+        function filterAuditLog(searchTerm = '', dateRange = null) {
+            let filteredEntries = projectData.auditTrail;
+            
+            if (searchTerm) {
+                filteredEntries = filteredEntries.filter(entry =>
+                    entry.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    entry.user.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }
+            
+            if (dateRange) {
+                filteredEntries = filteredEntries.filter(entry =>
+                    entry.timestamp >= dateRange.start && entry.timestamp <= dateRange.end
+                );
+            }
+            
+            return filteredEntries;
+        }
+
+        // Performance monitoring
+        function trackPerformanceMetrics() {
+            const metrics = {
+                pageLoadTime: performance.now(),
+                submitTime: null,
+                chartRenderTime: null,
+                lastUpdate: new Date()
+            };
+            
+            window.performanceMetrics = metrics;
+            return metrics;
+        }
+
+        // Initialize performance tracking
+        trackPerformanceMetrics();
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+1, Ctrl+2, Ctrl+3 for tab switching
+            if (e.ctrlKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        switchTab('researcher');
+                        document.querySelector('[onclick="switchTab(\'researcher\')"]').classList.add('active');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        switchTab('admin');
+                        document.querySelector('[onclick="switchTab(\'admin\')"]').classList.add('active');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        switchTab('audit');
+                        document.querySelector('[onclick="switchTab(\'audit\')"]').classList.add('active');
+                        break;
+                }
+            }
+        });
+
+        // Add tooltips for better UX
+        function addTooltips() {
+            const tooltipElements = [
+                { selector: '#physicalProgress', text: 'Enter the percentage of physical work completed' },
+                { selector: '#fundsUtilized', text: 'Enter the percentage of allocated budget spent' },
+                { selector: '.file-upload', text: 'Upload PDF, DOC, or DOCX files for automatic data extraction' }
+            ];
+            
+            tooltipElements.forEach(({ selector, text }) => {
+                const element = document.querySelector(selector);
+                if (element) {
+                    element.title = text;
+                }
+            });
+        }
+
+        // Initialize tooltips
+        addTooltips();
+    </script>
+</body>
+</html>

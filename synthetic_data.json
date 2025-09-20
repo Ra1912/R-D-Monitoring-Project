@@ -1,0 +1,25 @@
+{
+  "projectId": "RND-2024-001",
+  "physicalProgress": 45,
+  "financialProgress": 38,
+  "submissions": [
+    {
+      "timestamp": "2024-11-10T10:00:00",
+      "researcherName": "Dr. Asha Verma",
+      "physicalProgress": 20,
+      "financialProgress": 15,
+      "milestones": "Prototype completed",
+      "challenges": "Shortage of materials",
+      "nextSteps": "Scale-up testing"
+    },
+    {
+      "timestamp": "2024-11-18T14:30:00",
+      "researcherName": "Dr. Asha Verma",
+      "physicalProgress": 45,
+      "financialProgress": 38,
+      "milestones": "Testing phase ongoing",
+      "challenges": "Delays in vendor supply",
+      "nextSteps": "Finalize testing"
+    }
+  ]
+}
